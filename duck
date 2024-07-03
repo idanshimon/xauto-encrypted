@@ -1,0 +1,22 @@
+# Use a base image that includes openssl
+FROM ubuntu:latest
+
+# Install openssl
+RUN apt-get update && apt-get install -y openssl
+
+# Add the encrypted file and the entrypoint script
+ADD main.enc /main.enc
+ADD entrypoint.sh /entrypoint.sh
+
+# Ensure the entrypoint script is executable
+RUN chmod +x /entrypoint.sh
+
+# Set the decryption key as an environment variable (Consider more secure ways to handle this for production)
+ENV DECRYPTION_KEY=password1!
+
+RUN openssl enc -aes-256-cbc -d -salt -in /main.enc -out /main -k $DECRYPTION_KEY
+
+RUN chmod +x /main
+
+# Use the entrypoint script to start the container
+ENTRYPOINT ["/bin/sh" "-c" "/main"]
